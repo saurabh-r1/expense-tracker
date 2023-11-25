@@ -1,3 +1,4 @@
+// Login.js
 import React, { useContext, useRef, useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +7,7 @@ import AuthContext from '../Authentication/AuthContext';
 import './Login.css';
 
 const Login = () => {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
 
@@ -61,12 +62,13 @@ const Login = () => {
       })
       .then((data) => {
         authCtx.login(data.idToken, data.email);
-        navigate('/dummy-screen'); 
+        navigate('/welcome'); // Redirect to the welcome page
       })
       .catch((err) => {
         alert(err.message);
       });
   };
+
    
   return (
     <Container className="container1">
