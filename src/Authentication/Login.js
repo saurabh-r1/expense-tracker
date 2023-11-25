@@ -1,16 +1,14 @@
 import React, { useContext, useRef, useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import AuthContext from '../Authentication/AuthContext';
 import './Login.css';
 
-
 const Login = () => {
-  // const history = useNavigate();
+  const navigate = useNavigate(); // Initialize navigate
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
-
 
   const authCtx = useContext(AuthContext);
 
@@ -18,30 +16,24 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const toggle = () => {
-    setIsLogin(!isLogin); 
+    setIsLogin(!isLogin);
   };
 
-  
-  
   const submitHandler = (event) => {
     event.preventDefault();
-  
+
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
 
-    
-  
-    // Add validation
-  
     setIsLoading(true);
-  
+
     let url;
     if (isLogin) {
       url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBLKAbRXVsMIF8DYwJjnSGwYrzgHYy3jiU`;
     } else {
       url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBLKAbRXVsMIF8DYwJjnSGwYrzgHYy3jiU`;
     }
-  
+
     fetch(url, {
       method: 'POST',
       body: JSON.stringify({
@@ -69,14 +61,12 @@ const Login = () => {
       })
       .then((data) => {
         authCtx.login(data.idToken, data.email);
-        
+        navigate('/dummy-screen'); 
       })
       .catch((err) => {
         alert(err.message);
       });
   };
-  
-
    
   return (
     <Container className="container1">

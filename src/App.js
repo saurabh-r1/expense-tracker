@@ -1,14 +1,17 @@
 
-// import SignUpForm from "./components/Authentication/SignupForm";
-// import MyNavbar from "./components/Navbar/MyNavbar";
-import Login from "./components/Authentication/Login";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './Authentication/Login';
+import DummyScreen from './components/DummyScreen';
 
 function App() {
   return (
-    <div className="App">
-        <Login/> 
-
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/dummy-screen" element={<DummyScreen />} />
+      </Routes>
+    </Router>
   );
 }
 
