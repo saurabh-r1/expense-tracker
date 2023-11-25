@@ -1,10 +1,13 @@
 
+// import SignUpForm from "./components/Authentication/SignupForm";
+// import MyNavbar from "./components/Navbar/MyNavbar";
+import Login from "./components/Authentication/Login";
+
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        Expense Tracker
-      </header>
+        <Login/> 
+
     </div>
   );
 }
