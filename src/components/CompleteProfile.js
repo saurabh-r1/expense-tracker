@@ -2,17 +2,33 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Button, Form, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const CompleteProfile = () => {
   const [fullName, setFullName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
 
-  const updateProfile = () => {
-    // Implement your logic for updating the profile
-    // For now, just log the values to the console
-    console.log('Full Name:', fullName);
-    console.log('Profile Photo URL:', photoUrl);
-    // You can add additional logic here, like sending a request to update the user's profile
+  const updateProfile = (e) => {
+    e.preventDefault();
+
+    // Create a data object with the user's input
+    const userData = {
+      fullName,
+      photoUrl,
+    };
+
+   
+    axios
+      .post('https://expense-tracker-aa503-default-rtdb.firebaseio.com/users.json', userData)
+      .then((response) => {
+        console.log('Data saved successfully:', response.data);
+        // Clear the form fields after successful submission
+        setFullName('');
+        setPhotoUrl('');
+      })
+      .catch((error) => {
+        console.error('Error saving data:', error);
+      });
   };
 
   return (
@@ -42,33 +58,33 @@ const CompleteProfile = () => {
           <Form>
             <Row>
               <Col className='col-6'>
-            <Form.Group controlId="fullName" >
-              <Form.Label>Full Name:</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter your full name"
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </Form.Group>
-            </Col>
-            <Col className='col-6'>
-            <Form.Group controlId="photoUrl" >
-              <Form.Label>Profile Photo URL:</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter your profile photo URL"
-                onChange={(e) => setPhotoUrl(e.target.value)}
-              />
-            </Form.Group>
-            </Col>
+                <Form.Group controlId="fullName">
+                  <Form.Label>Full Name:</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter your full name"
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col className='col-6'>
+                <Form.Group controlId="photoUrl">
+                  <Form.Label>Profile Photo URL:</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter your profile photo URL"
+                    onChange={(e) => setPhotoUrl(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
             </Row>
             <div className='text-end mt-3'>
-            <Button variant="primary" onClick={updateProfile}>
-              Update
-            </Button>
-            <Button variant="danger" className="ms-2">
-              Cancel
-            </Button>
+              <Button variant="primary" onClick={updateProfile}>
+                Update
+              </Button>
+              <Button variant="danger" className="ms-2">
+                Cancel
+              </Button>
             </div>
           </Form>
         </Card.Body>
