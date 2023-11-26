@@ -3,7 +3,7 @@ import React, { useContext, useRef, useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
-import AuthContext from '../Authentication/AuthContext';
+import AuthContext from '../../Authentication/AuthContext';
 import './Login.css';
 
 const Login = () => {
@@ -71,7 +71,7 @@ const Login = () => {
 
    
   return (
-    <Container className="container1">
+    <Container className="mt-5">
       <div className="login-container">
         <h2 className="login-header">{isLogin ? 'Login' : 'Sign Up'}</h2>
         <Form onSubmit={submitHandler}>

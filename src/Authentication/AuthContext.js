@@ -27,6 +27,7 @@ export const AuthContextProvider = (props) => {
     setUserEmail(null);
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
+    console.log('loggedOut');
   };
 
   const userIsLoggedIn = !!token;
