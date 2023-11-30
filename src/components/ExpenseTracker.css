@@ -1,0 +1,58 @@
+/* ExpenseTracker.css */
+
+.expense-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .expense-list {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .expense-form h2,
+  .expense-list h3 {
+    color: #007bff;
+  }
+  
+  .expense-form label {
+    font-weight: bold;
+    color: #495057;
+  }
+  
+  .expense-form .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .expense-form .form-control {
+    display: inline-block;
+    width: auto;
+    margin-right: 15px; /* Adjust spacing between fields as needed */
+  }
+  
+  .expense-form button {
+    background-color: #28a745;
+    border: none;
+  }
+  
+  .expense-form button:hover {
+    background-color: #218838;
+  }
+  
+  .expense-list .list-group-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+  }
+  
+  .expense-list .list-group-item strong {
+    color: #dc3545;
+  }
+  
+  /* Add more styles as needed */
+  
