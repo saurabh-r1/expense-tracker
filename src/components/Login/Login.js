@@ -1,5 +1,5 @@
 // Login.js
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +17,14 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
 
+  useEffect(() => {
+    // Redirect to the welcome page if already logged in
+    if (authCtx.isLoggedIn) {
+      navigate('/welcome');
+    }
+  }, [authCtx.isLoggedIn, navigate]);
+  
+
   const toggle = () => {
     setIsLogin(!isLogin);
   };
@@ -30,6 +38,7 @@ const Login = () => {
 
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
+
 
     setIsLoading(true);
 
@@ -144,7 +153,7 @@ const Login = () => {
         {!isForgotPassword && (
           <div className="button2">
             <Button className='bg-white' onClick={toggle}>
-              {isLogin ? 'Create New Account' : 'Login with Existing Account'}
+              {isLogin ? 'New User? Create Account' : 'Login with Existing Account'}
             </Button>
           </div>
         )}
