@@ -1,5 +1,6 @@
+// WelcomePage.js
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../Authentication/AuthContext';
 import axios from 'axios';
@@ -9,6 +10,9 @@ const WelcomePage = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,6 +23,7 @@ const WelcomePage = () => {
 
         const user = Object.values(response.data)[0];
         setUserData(user);
+        setEmailVerified(user?.emailVerified || false);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -28,7 +33,32 @@ const WelcomePage = () => {
   }, [auth]);
 
   const handleEdit = () => {
-      navigate('/edit-profile');
+    navigate('/edit-profile');
+  };
+
+  const handleVerifyEmail = async () => {
+    try {
+      setIsLoading(true);
+      await auth.sendVerificationEmail();
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error sending verification email:', error);
+      
+    }
+  };
+
+  const handleConfirmEmail = async () => {
+    try {
+      setIsLoading(true);
+      await auth.confirmEmailVerification(verificationCode);
+      setIsLoading(false);
+      // Optionally, you can provide user feedback or navigate to a success page
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error confirming email verification:', error);
+      // Handle error
+    }
   };
 
   return (
@@ -47,6 +77,11 @@ const WelcomePage = () => {
               <p className="m-0">
                 <em>Welcome, {userData.fullName || 'User'}</em>
               </p>
+              {!emailVerified && (
+                <Button variant="info" onClick={handleVerifyEmail}>
+                  Verify Email
+                </Button>
+              )}
             </div>
           ) : (
             <p className="m-0">
@@ -87,6 +122,31 @@ const WelcomePage = () => {
               </Row>
               <div className="text-end mt-4">
                 <Button variant="primary" onClick={handleEdit}>Edit</Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
+      {emailVerified && (
+        <div>
+          <hr />
+          <Card className="mt-5">
+            <Card.Body>
+              <h3 className="mb-4">Email Verification</h3>
+              <Form.Group controlId="verificationCode">
+                <Form.Label>Enter Verification Code:</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Verification Code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                />
+              </Form.Group>
+              <div className="text-end mt-4">
+                <Button variant="info" onClick={handleConfirmEmail} disabled={isLoading}>
+                  Confirm Email
+                </Button>
               </div>
             </Card.Body>
           </Card>
