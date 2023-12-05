@@ -5,42 +5,42 @@ const AuthContext = React.createContext({
   token: '',
   isLoggedIn: false,
   userEmail: '',
-  isEmailVerified: false,
-  login: (token, userEmail, isEmailVerified) => {},
+  emailVerified: false,
+  login: (token, userEmail, emailVerified) => {},
   logout: () => {},
   getToken: () => {},
   sendVerificationEmail: () => {},
-  setIsEmailVerified: (isEmailVerified) => {},
-  confirmEmailVerification: (oobCode) => {},
 });
 
 export const AuthContextProvider = (props) => {
   const initialToken = localStorage.getItem('token');
   const initialUserEmail = localStorage.getItem('userEmail');
-  const initialIsEmailVerified = localStorage.getItem('isEmailVerified') === 'true';
+  const initialEmailVerified = localStorage.getItem('emailVerified') === 'true';
 
   const [token, setToken] = useState(initialToken);
   const [userEmail, setUserEmail] = useState(initialUserEmail);
-  const [isEmailVerified, setIsEmailVerified] = useState(initialIsEmailVerified);
+  const [emailVerified, setEmailVerified] = useState(initialEmailVerified);
 
-  const loginHandler = (token, userEmail, isEmailVerified) => {
+  const loginHandler = (token, userEmail, emailVerified) => {
     setToken(token);
     setUserEmail(userEmail);
-    setIsEmailVerified((prevIsEmailVerified) => prevIsEmailVerified || isEmailVerified);
+    setEmailVerified(emailVerified);
     localStorage.setItem('token', token);
     localStorage.setItem('userEmail', userEmail);
-    localStorage.setItem('isEmailVerified', isEmailVerified);
+    localStorage.setItem('emailVerified', emailVerified);
   };
 
   const logoutHandler = () => {
     setToken(null);
     setUserEmail(null);
-    setIsEmailVerified(false);
+    setEmailVerified(false);
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
-    localStorage.removeItem('isEmailVerified');
+    localStorage.removeItem('emailVerified');
     console.log('loggedOut');
   };
+
+  const userIsLoggedIn = !!token;
 
   const getToken = () => {
     return token;
@@ -48,7 +48,7 @@ export const AuthContextProvider = (props) => {
 
   const sendVerificationEmail = async () => {
     try {
-      const response = await fetch(
+      await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBLKAbRXVsMIF8DYwJjnSGwYrzgHYy3jiU`,
         {
           method: 'POST',
@@ -61,59 +61,22 @@ export const AuthContextProvider = (props) => {
           },
         }
       );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error.message || 'Email verification failed!');
-      }
-
-      console.log('Verification email sent successfully');
+      // Handle success (optional)
     } catch (error) {
       console.error('Error sending verification email:', error);
-    }
-  };
-
-
-  const confirmEmailVerification = async (oobCode) => {
-    try {
-      const response = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyBLKAbRXVsMIF8DYwJjnSGwYrzgHYy3jiU`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            oobCode: oobCode,
-            emailVerified: true,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error.message || 'Email verification confirmation failed!');
-      }
-
-      console.log('Email verification confirmed successfully:', data);
-      setIsEmailVerified(true);
-    } catch (error) {
-      console.error('Error confirming email verification:', error);
+      // Handle error
     }
   };
 
   const contextValue = {
     token: token,
-    isLoggedIn: !!token,
+    isLoggedIn: userIsLoggedIn,
     userEmail: userEmail,
-    isEmailVerified: isEmailVerified,
+    emailVerified: emailVerified,
     login: loginHandler,
     logout: logoutHandler,
     getToken: getToken,
     sendVerificationEmail: sendVerificationEmail,
-    confirmEmailVerification: confirmEmailVerification,
   };
 
   return (

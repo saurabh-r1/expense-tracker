@@ -20,7 +20,7 @@ const Login = () => {
   useEffect(() => {
     // Redirect to the welcome page if already logged in
     if (authCtx.isLoggedIn) {
-      navigate('/welcome');
+      navigate('/expense-tracker');
     }
   }, [authCtx.isLoggedIn, navigate]);
   
@@ -76,7 +76,7 @@ const Login = () => {
       })
       .then((data) => {
         authCtx.login(data.idToken, data.email);
-        navigate('/welcome'); // Redirect to the welcome page
+        navigate('/expense-tracker');
       })
       .catch((err) => {
         alert(err.message);

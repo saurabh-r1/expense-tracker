@@ -1,38 +1,87 @@
-// ExpenseTracker.js
+import React, { useState, useEffect } from "react";
+import {
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  ListGroup,
+  Dropdown,
+} from "react-bootstrap";
+import { useAuth } from "../Authentication/AuthContext";
+import axios from "axios";
+import "./ExpenseTracker.css";
 
-import React, { useState, useEffect } from 'react';
-import { Form, Button, Container, Row, Col, ListGroup, Dropdown } from 'react-bootstrap';
-import { useAuth } from '../Authentication/AuthContext';
-import './ExpenseTracker.css'; // Import your custom CSS for additional styling
-
-const categories = ['Food', 'Petrol', 'Salary', 'Other'];
+const categories = ["Food", "Petrol", "Salary", "Other"];
 
 const ExpenseTracker = () => {
   const auth = useAuth();
   const [expenseList, setExpenseList] = useState([]);
-  const [moneySpent, setMoneySpent] = useState('');
-  const [description, setDescription] = useState('');
+  const [moneySpent, setMoneySpent] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
   useEffect(() => {
-    const storedExpenses = JSON.parse(localStorage.getItem('expenses')) || [];
-    setExpenseList(storedExpenses);
-  }, []);
+    if (auth.isLoggedIn) {
+      fetchExpenses();
+    }
+  }, [auth.isLoggedIn]);
 
-  const addExpense = () => {
-    const newExpense = {
-      id: new Date().toISOString(),
-      moneySpent,
-      description,
-      category: selectedCategory,
-    };
+  const fetchExpenses = async () => {
+    try {
+      const response = await axios.get(
+        "https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses.json"
+      );
 
-    setExpenseList((prevExpenses) => [...prevExpenses, newExpense]);
-    localStorage.setItem('expenses', JSON.stringify([...expenseList, newExpense]));
+      if (!response.data) {
+        throw new Error("Failed to fetch expenses");
+      }
 
-    setMoneySpent('');
-    setDescription('');
-    setSelectedCategory(categories[0]);
+      setExpenseList(Object.values(response.data));
+    } catch (error) {
+      console.error("Error fetching expenses:", error.message);
+    }
+  };
+
+  const addExpense = async () => {
+    try {
+      if (
+        !moneySpent ||
+        isNaN(parseFloat(moneySpent)) ||
+        description.trim() === ""
+      ) {
+        throw new Error(
+          "Please enter valid values for Money Spent and Description."
+        );
+      }
+
+      const newExpense = {
+        moneySpent,
+        description,
+        category: selectedCategory,
+      };
+
+      console.log("Request body for addExpense:", newExpense);
+
+      const response = await axios.post(
+        "https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses.json",
+        newExpense
+      );
+
+      if (!response.data) {
+        throw new Error("Failed to add expense");
+      }
+
+      const newExpenseId = response.data.name;
+
+      setExpenseList([...expenseList, { id: newExpenseId, ...newExpense }]);
+
+      setMoneySpent("");
+      setDescription("");
+      setSelectedCategory(categories[0]);
+    } catch (error) {
+      console.error("Error adding expense:", error.message);
+    }
   };
 
   if (!auth.isLoggedIn) {
@@ -47,24 +96,20 @@ const ExpenseTracker = () => {
             <h2>Expense Tracker</h2>
             <Form>
               <Row className="mb-3">
-                <Col md={4}>
+                <Col md={3}>
                   <Form.Label>Money Spent:</Form.Label>
-                </Col>
-                <Col md={8}>
+                  <br />
                   <Form.Control
                     type="number"
                     value={moneySpent}
-                    onChange={(e) => setMoneySpent(e.target.value)}
+                    onChange={(e) => setMoneySpent(Math.max(0, e.target.value))}
+                    min="0"
                     required
                   />
                 </Col>
-              </Row>
-
-              <Row className="mb-3">
                 <Col md={4}>
                   <Form.Label>Description:</Form.Label>
-                </Col>
-                <Col md={8}>
+                  <br />
                   <Form.Control
                     type="text"
                     value={description}
@@ -72,15 +117,10 @@ const ExpenseTracker = () => {
                     required
                   />
                 </Col>
-              </Row>
-
-              <Row className="mb-3">
-                <Col md={4}>
+                <Col md={2}>
                   <Form.Label>Category:</Form.Label>
-                </Col>
-                <Col md={8}>
                   <Dropdown>
-                    <Dropdown.Toggle variant="primary" id="dropdown-category">
+                    <Dropdown.Toggle variant="secondary" id="dropdown-category">
                       {selectedCategory}
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
@@ -95,11 +135,12 @@ const ExpenseTracker = () => {
                     </Dropdown.Menu>
                   </Dropdown>
                 </Col>
-              </Row>
-
-              <Row className="mb-3">
-                <Col md={{ offset: 4, span: 8 }}>
-                  <Button variant="primary" onClick={addExpense}>
+                <Col md={3} className="mt-4">
+                  <Button
+                    className="px-5"
+                    variant="primary"
+                    onClick={addExpense}
+                  >
                     Add Expense
                   </Button>
                 </Col>
@@ -116,7 +157,8 @@ const ExpenseTracker = () => {
             <ListGroup>
               {expenseList.map((expense) => (
                 <ListGroup.Item key={expense.id}>
-                  <strong>{expense.moneySpent}</strong> - {expense.description} ({expense.category})
+                  <strong>{expense.moneySpent}</strong> - {expense.description}{" "}
+                  ({expense.category})
                 </ListGroup.Item>
               ))}
             </ListGroup>

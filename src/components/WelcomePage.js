@@ -1,6 +1,6 @@
 // WelcomePage.js
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../Authentication/AuthContext';
 import axios from 'axios';
@@ -10,9 +10,7 @@ const WelcomePage = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const [userData, setUserData] = useState(null);
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,9 +21,10 @@ const WelcomePage = () => {
 
         const user = Object.values(response.data)[0];
         setUserData(user);
-        setEmailVerified(user?.emailVerified || false);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching user data:', error);
+        setIsLoading(false);
       }
     };
 
@@ -38,26 +37,10 @@ const WelcomePage = () => {
 
   const handleVerifyEmail = async () => {
     try {
-      setIsLoading(true);
       await auth.sendVerificationEmail();
-      setIsLoading(false);
+      console.log('Verification email sent successfully');
     } catch (error) {
-      setIsLoading(false);
       console.error('Error sending verification email:', error);
-      
-    }
-  };
-
-  const handleConfirmEmail = async () => {
-    try {
-      setIsLoading(true);
-      await auth.confirmEmailVerification(verificationCode);
-      setIsLoading(false);
-      // Optionally, you can provide user feedback or navigate to a success page
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Error confirming email verification:', error);
-      // Handle error
     }
   };
 
@@ -65,19 +48,23 @@ const WelcomePage = () => {
     <Container className="p-0 mt-3">
       <Row>
         <Col>
-          <p className="m-0 h5"><em>Welcome to Expense Tracker!!!</em></p>
+          <p className="m-0 h5">
+            <em>Welcome to Expense Tracker!!!</em>
+          </p>
         </Col>
         <Col
           xs="auto"
           className="text-end"
           style={{ backgroundColor: '#C4A484', borderRadius: '5px' }}
         >
-          {userData ? (
+          {isLoading ? (
+            <p>Loading...</p>
+          ) : userData ? (
             <div>
               <p className="m-0">
                 <em>Welcome, {userData.fullName || 'User'}</em>
               </p>
-              {!emailVerified && (
+              {!userData.emailVerified && (
                 <Button variant="info" onClick={handleVerifyEmail}>
                   Verify Email
                 </Button>
@@ -98,7 +85,7 @@ const WelcomePage = () => {
         </Col>
       </Row>
 
-      {userData && (
+      {!isLoading && userData && (
         <div>
           <hr />
           <Card className="mt-5">
@@ -112,6 +99,7 @@ const WelcomePage = () => {
                   <span>{userData.fullName || 'N/A'}</span>
                 </Col>
               </Row>
+             
               <Row>
                 <Col className="col-4">
                   <strong>Profile Photo URL:</strong>
@@ -121,31 +109,8 @@ const WelcomePage = () => {
                 </Col>
               </Row>
               <div className="text-end mt-4">
-                <Button variant="primary" onClick={handleEdit}>Edit</Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </div>
-      )}
-
-      {emailVerified && (
-        <div>
-          <hr />
-          <Card className="mt-5">
-            <Card.Body>
-              <h3 className="mb-4">Email Verification</h3>
-              <Form.Group controlId="verificationCode">
-                <Form.Label>Enter Verification Code:</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Verification Code"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                />
-              </Form.Group>
-              <div className="text-end mt-4">
-                <Button variant="info" onClick={handleConfirmEmail} disabled={isLoading}>
-                  Confirm Email
+                <Button variant="primary" onClick={handleEdit}>
+                  Edit
                 </Button>
               </div>
             </Card.Body>
