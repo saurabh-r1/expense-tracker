@@ -8,6 +8,10 @@ const CompleteProfile = () => {
   const [fullName, setFullName] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
 
+  const userEmailFromStorage = localStorage.getItem('userEmail');
+  const userEmail = userEmailFromStorage ? userEmailFromStorage.replace(/[@.]/g, '') : '';
+
+
   const updateProfile = (e) => {
     e.preventDefault();
   
@@ -25,7 +29,7 @@ const CompleteProfile = () => {
     };
   
     axios
-      .post('https://expense-tracker-aa503-default-rtdb.firebaseio.com/users/.json', userData)
+      .post(`https://expense-tracker-aa503-default-rtdb.firebaseio.com/users/${userEmail}/.json`, userData)
       .then((response) => {
         console.log('Data saved successfully:', response.data);
         localStorage.setItem('postId',response.data.name);

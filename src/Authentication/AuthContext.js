@@ -37,7 +37,7 @@ export const AuthContextProvider = (props) => {
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('emailVerified');
-    console.log('loggedOut');
+    localStorage.removeItem('postId');
   };
 
   const userIsLoggedIn = !!token;

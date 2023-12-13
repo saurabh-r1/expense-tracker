@@ -32,7 +32,6 @@ const EditProfile = () => {
 
     try {
       await axios.put(`https://expense-tracker-aa503-default-rtdb.firebaseio.com/users/${postId}/.json`, userData);
-      console.log('Data updated successfully');
 
       // Clear the form fields after successful submission
       setFullName('');

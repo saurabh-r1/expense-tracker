@@ -20,6 +20,10 @@ const ExpenseTracker = () => {
   const [moneySpent, setMoneySpent] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [editingExpense, setEditingExpense] = useState(null);
+
+  const userEmailFromStorage = localStorage.getItem('userEmail');
+  const userEmail = userEmailFromStorage ? userEmailFromStorage.replace(/[@.]/g, '') : '';
 
   useEffect(() => {
     if (auth.isLoggedIn) {
@@ -30,7 +34,7 @@ const ExpenseTracker = () => {
   const fetchExpenses = async () => {
     try {
       const response = await axios.get(
-        "https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses.json"
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`
       );
 
       if (!response.data) {
@@ -61,10 +65,8 @@ const ExpenseTracker = () => {
         category: selectedCategory,
       };
 
-      console.log("Request body for addExpense:", newExpense);
-
       const response = await axios.post(
-        "https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses.json",
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`,
         newExpense
       );
 
@@ -83,6 +85,76 @@ const ExpenseTracker = () => {
       console.error("Error adding expense:", error.message);
     }
   };
+
+  const deleteExpense = async (expenseId) => {
+    try {
+      const response = await axios.delete(
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${expenseId}.json`
+      );
+  
+      if (!response.data) {
+        throw new Error("Failed to delete expense");
+      }
+  
+      console.log("Expense deleted successfully:", expenseId);
+  
+      const updatedExpenses = expenseList.filter((expense) => expense.id !== expenseId);
+      setExpenseList(updatedExpenses);
+    } catch (error) {
+      console.error("Error deleting expense:", error.message);
+    }
+  };
+  
+  
+
+  const editExpense = (expense) => {
+    setEditingExpense(expense);
+    setMoneySpent(expense.moneySpent);
+    setDescription(expense.description);
+    setSelectedCategory(expense.category);
+  };
+  
+  const updateExpense = async () => {
+    try {
+      if (
+        !moneySpent ||
+        isNaN(parseFloat(moneySpent)) ||
+        description.trim() === ""
+      ) {
+        throw new Error(
+          "Please enter valid values for Money Spent and Description."
+        );
+      }
+  
+      const updatedExpense = {
+        moneySpent,
+        description,
+        category: selectedCategory,
+      };
+  
+      const response = await axios.put(
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${editingExpense.id}.json`,
+        updatedExpense
+      );
+  
+      if (!response.data) {
+        throw new Error("Failed to update expense");
+      }
+  
+      const updatedExpenses = expenseList.map((expense) =>
+        expense.id === editingExpense.id ? { id: editingExpense.id, ...updatedExpense } : expense
+      );
+  
+      setExpenseList(updatedExpenses);
+      setMoneySpent("");
+      setDescription("");
+      setSelectedCategory(categories[0]);
+      setEditingExpense(null);
+    } catch (error) {
+      console.error("Error updating expense:", error.message);
+    }
+  };
+  
 
   if (!auth.isLoggedIn) {
     return null;
@@ -136,13 +208,23 @@ const ExpenseTracker = () => {
                   </Dropdown>
                 </Col>
                 <Col md={3} className="mt-4">
-                  <Button
-                    className="px-5"
-                    variant="primary"
-                    onClick={addExpense}
-                  >
-                    Add Expense
-                  </Button>
+                  {editingExpense ? (
+                    <Button
+                      className="px-5"
+                      variant="warning"
+                      onClick={updateExpense}
+                    >
+                      Update Expense
+                    </Button>
+                  ) : (
+                    <Button
+                      className="px-5"
+                      variant="primary"
+                      onClick={addExpense}
+                    >
+                      Add Expense
+                    </Button>
+                  )}
                 </Col>
               </Row>
             </Form>
@@ -157,8 +239,21 @@ const ExpenseTracker = () => {
             <ListGroup>
               {expenseList.map((expense) => (
                 <ListGroup.Item key={expense.id}>
-                  <strong>{expense.moneySpent}</strong> - {expense.description}{" "}
-                  ({expense.category})
+                  <Row>
+                  <div className="col-8">
+                    <strong> Money Spent:- ₹ {expense.moneySpent}</strong><br/>
+                     Description- {expense.description}<br/>
+                     Category- ({expense.category})
+                  </div>
+                  <div className="expense-actions col-4">
+                    <Button className="m-3 px-3" variant="danger" size="sm" onClick={() => deleteExpense(expense.id)} >
+                      Delete
+                    </Button>
+                    <Button variant="info" size="sm" onClick={() => editExpense(expense)}>
+                      Edit
+                    </Button>
+                  </div>
+                  </Row>
                 </ListGroup.Item>
               ))}
             </ListGroup>

@@ -12,11 +12,15 @@ const WelcomePage = () => {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const userEmailFromStorage = localStorage.getItem('userEmail');
+  const userEmail = userEmailFromStorage ? userEmailFromStorage.replace(/[@.]/g, '') : '';
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `https://expense-tracker-aa503-default-rtdb.firebaseio.com/users.json?auth=${auth.getToken()}`
+          `https://expense-tracker-aa503-default-rtdb.firebaseio.com/users/${userEmail}/.json?auth=${auth.getToken()}`
         );
 
         const user = Object.values(response.data)[0];
