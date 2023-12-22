@@ -32,20 +32,26 @@ const ExpenseTracker = () => {
   }, [auth.isLoggedIn]);
 
   const fetchExpenses = async () => {
-    try {
-      const response = await axios.get(
-        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`
-      );
+  try {
+    const response = await axios.get(
+      `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`
+    );
 
-      if (!response.data) {
-        throw new Error("Failed to fetch expenses");
-      }
-
-      setExpenseList(Object.values(response.data));
-    } catch (error) {
-      console.error("Error fetching expenses:", error.message);
+    if (!response.data) {
+      throw new Error("Failed to fetch expenses");
     }
-  };
+
+    const expensesWithIds = Object.keys(response.data).map((id) => ({
+      id,
+      ...response.data[id],
+    }));
+
+    setExpenseList(expensesWithIds);
+  } catch (error) {
+    console.error("Error fetching expenses:", error.message);
+  }
+};
+
 
   const addExpense = async () => {
     try {
@@ -87,23 +93,29 @@ const ExpenseTracker = () => {
   };
 
   const deleteExpense = async (expenseId) => {
-    try {
-      const response = await axios.delete(
-        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${expenseId}.json`
-      );
-  
-      if (!response.data) {
-        throw new Error("Failed to delete expense");
-      }
-  
-      console.log("Expense deleted successfully:", expenseId);
-  
-      const updatedExpenses = expenseList.filter((expense) => expense.id !== expenseId);
-      setExpenseList(updatedExpenses);
-    } catch (error) {
-      console.error("Error deleting expense:", error.message);
+  try {
+    setExpenseList((prevExpenses) =>
+      prevExpenses.filter((expense) => expense.id !== expenseId)
+    );
+
+    const response = await axios.delete(
+      `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${expenseId}.json`
+    );
+
+    if (!response.data) {
+      throw new Error("Failed to delete expense");
     }
-  };
+
+    console.log("Expense deleted successfully:", expenseId);
+  } catch (error) {
+    console.error("Error deleting expense:", error.message);
+
+    // Revert the state in case of an error
+    fetchExpenses();
+  }
+};
+
+  
   
   
 
@@ -116,14 +128,8 @@ const ExpenseTracker = () => {
   
   const updateExpense = async () => {
     try {
-      if (
-        !moneySpent ||
-        isNaN(parseFloat(moneySpent)) ||
-        description.trim() === ""
-      ) {
-        throw new Error(
-          "Please enter valid values for Money Spent and Description."
-        );
+      if (!moneySpent || isNaN(parseFloat(moneySpent)) || description.trim() === "") {
+        throw new Error("Please enter valid values for Money Spent and Description.");
       }
   
       const updatedExpense = {
@@ -141,11 +147,13 @@ const ExpenseTracker = () => {
         throw new Error("Failed to update expense");
       }
   
-      const updatedExpenses = expenseList.map((expense) =>
-        expense.id === editingExpense.id ? { id: editingExpense.id, ...updatedExpense } : expense
+      // Update only the specific expense in the state
+      setExpenseList((prevExpenses) =>
+        prevExpenses.map((expense) =>
+          expense.id === editingExpense.id ? { id: editingExpense.id, ...updatedExpense } : expense
+        )
       );
   
-      setExpenseList(updatedExpenses);
       setMoneySpent("");
       setDescription("");
       setSelectedCategory(categories[0]);
@@ -154,6 +162,7 @@ const ExpenseTracker = () => {
       console.error("Error updating expense:", error.message);
     }
   };
+  
   
 
   if (!auth.isLoggedIn) {
