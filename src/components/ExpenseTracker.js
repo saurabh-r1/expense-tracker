@@ -32,26 +32,29 @@ const ExpenseTracker = () => {
   }, [auth.isLoggedIn]);
 
   const fetchExpenses = async () => {
-  try {
-    const response = await axios.get(
-      `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`
-    );
+    try {
+      const response = await axios.get(
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}.json`
+      );
 
-    if (!response.data) {
-      throw new Error("Failed to fetch expenses");
+      if (!response.data) {
+        throw new Error("Failed to fetch expenses");
+      }
+
+      const expensesWithIds = Object.keys(response.data).map((id) => ({
+        id,
+        ...response.data[id],
+      }));
+
+      setExpenseList(expensesWithIds);
+    } catch (error) {
+      console.error("Error fetching expenses:", error.message);
     }
+  };
 
-    const expensesWithIds = Object.keys(response.data).map((id) => ({
-      id,
-      ...response.data[id],
-    }));
-
-    setExpenseList(expensesWithIds);
-  } catch (error) {
-    console.error("Error fetching expenses:", error.message);
-  }
-};
-
+  const calculateTotalAmount = () => {
+    return expenseList.reduce((total, expense) => total + parseFloat(expense.moneySpent), 0);
+  };
 
   const addExpense = async () => {
     try {
@@ -93,31 +96,27 @@ const ExpenseTracker = () => {
   };
 
   const deleteExpense = async (expenseId) => {
-  try {
-    setExpenseList((prevExpenses) =>
-      prevExpenses.filter((expense) => expense.id !== expenseId)
-    );
+    try {
+      setExpenseList((prevExpenses) =>
+        prevExpenses.filter((expense) => expense.id !== expenseId)
+      );
 
-    const response = await axios.delete(
-      `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${expenseId}.json`
-    );
+      const response = await axios.delete(
+        `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${expenseId}.json`
+      );
 
-    if (!response.data) {
-      throw new Error("Failed to delete expense");
+      if (!response.data) {
+        throw new Error("Failed to delete expense");
+      }
+
+      console.log("Expense deleted successfully:", expenseId);
+    } catch (error) {
+      console.error("Error deleting expense:", error.message);
+
+      // Revert the state in case of an error
+      fetchExpenses();
     }
-
-    console.log("Expense deleted successfully:", expenseId);
-  } catch (error) {
-    console.error("Error deleting expense:", error.message);
-
-    // Revert the state in case of an error
-    fetchExpenses();
-  }
-};
-
-  
-  
-  
+  };
 
   const editExpense = (expense) => {
     setEditingExpense(expense);
@@ -125,35 +124,35 @@ const ExpenseTracker = () => {
     setDescription(expense.description);
     setSelectedCategory(expense.category);
   };
-  
+
   const updateExpense = async () => {
     try {
       if (!moneySpent || isNaN(parseFloat(moneySpent)) || description.trim() === "") {
         throw new Error("Please enter valid values for Money Spent and Description.");
       }
-  
+
       const updatedExpense = {
         moneySpent,
         description,
         category: selectedCategory,
       };
-  
+
       const response = await axios.put(
         `https://expense-tracker-aa503-default-rtdb.firebaseio.com/expenses/${userEmail}/${editingExpense.id}.json`,
         updatedExpense
       );
-  
+
       if (!response.data) {
         throw new Error("Failed to update expense");
       }
-  
+
       // Update only the specific expense in the state
       setExpenseList((prevExpenses) =>
         prevExpenses.map((expense) =>
           expense.id === editingExpense.id ? { id: editingExpense.id, ...updatedExpense } : expense
         )
       );
-  
+
       setMoneySpent("");
       setDescription("");
       setSelectedCategory(categories[0]);
@@ -162,12 +161,12 @@ const ExpenseTracker = () => {
       console.error("Error updating expense:", error.message);
     }
   };
-  
-  
 
   if (!auth.isLoggedIn) {
     return null;
   }
+
+  const totalAmount = calculateTotalAmount();
 
   return (
     <Container className="mt-5">
@@ -249,23 +248,27 @@ const ExpenseTracker = () => {
               {expenseList.map((expense) => (
                 <ListGroup.Item key={expense.id}>
                   <Row>
-                  <div className="col-8">
-                    <strong> Money Spent:- ₹ {expense.moneySpent}</strong><br/>
-                     Description- {expense.description}<br/>
-                     Category- ({expense.category})
-                  </div>
-                  <div className="expense-actions col-4">
-                    <Button className="m-3 px-3" variant="danger" size="sm" onClick={() => deleteExpense(expense.id)} >
-                      Delete
-                    </Button>
-                    <Button variant="info" size="sm" onClick={() => editExpense(expense)}>
-                      Edit
-                    </Button>
-                  </div>
+                    <div className="col-8">
+                      <strong> Money Spent: ₹ {expense.moneySpent}</strong><br/>
+                      Description- {expense.description}<br/>
+                      Category- ({expense.category})
+                    </div>
+                    <div className="expense-actions col-4">
+                      <Button className="m-3 px-3" variant="danger" size="sm" onClick={() => deleteExpense(expense.id)} >
+                        Delete
+                      </Button>
+                      <Button variant="info" size="sm" onClick={() => editExpense(expense)}>
+                        Edit
+                      </Button>
+                    </div>
                   </Row>
                 </ListGroup.Item>
               ))}
             </ListGroup>
+
+            <div className="total-amount mt-3">
+              <strong>Total Amount: ₹ {totalAmount.toFixed(2)}</strong>
+            </div>
           </div>
         </Col>
       </Row>
